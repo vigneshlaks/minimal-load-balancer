@@ -55,7 +55,24 @@ Layer 7 load balancer
 	Distribute information based on data found in application layer http headers, cookies, etc.
 	Allow routing decisions based on given parameters
 
+# Maglev Summary
+
+System consists of multiple backends located between routers and endpoints. Maglev machines are responsible for matching packets to services and spreading evenly.
+
+Maglev uses VIPs which connect to multiple endpoints. Routers have access to these VIPs (essentially acting as pseudo ip addresses). DNS sends to frontend location (specific VIP). Forwards packets to a Maglev machine via ECMP.
+
+Each machine contains a controller and forwarder. Controller states the health of the forwarder and cuts off connection to specific Maglev Machine if it’s not healthy. Forwarders contain backend pools connecting to real ip endpoints. Forwarder handles forwarding of connections.
+
+Forwarder’s design is optimized for speed by bypassing the linux kernel network stack. Performs a 5 tuple hashing to distribute packets to threads which then select backends.
+
+Connection oriented protocols like TCP need all packets sent to the same backend server. To do this they use a combination of consistent hashing and connection tracking. The 5 tuple hash is stored for quick look up. If this does not work, no healthy backend or no connection found, a new one is set using consistent hashing.
+
+Consistent hashing helps mitigate the effects of changing the maglev machine.
+
+Algorithm prioritizes load balancing by allowing backends to take turns filling consistency table. 
+
 # Todo
 
-Understand and incorporate more advanced algorithms
-
+Break down into disjoint simple pieces to implement.
+    Understand Hashing Algorithm
+    Get clear idea of different concepts (maglev machines, forwarder, controller, vip to ip, backend pools) and draw out simplified diagrams
