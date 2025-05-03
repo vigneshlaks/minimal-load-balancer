@@ -71,6 +71,12 @@ Consistent hashing helps mitigate the effects of changing the maglev machine.
 
 Algorithm prioritizes load balancing by allowing backends to take turns filling consistency table. 
 
+# Maglev Summary
+
+![High Level Diagram](images/high-level-diagram.png)
+*High-level architecture of the Maglev load balancing system*
+
+
 # Todo
 
 Break down into disjoint simple pieces to implement.
