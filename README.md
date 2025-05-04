@@ -1,84 +1,93 @@
-# Basic Load Balancing
-
-2 types
-	static - Work the same way regardless of the state of the servers
-		Examples
-			Round Robin
-	Dynamic Load Balancing - Considers state and communicates w the server
-
-We can use a weight parameters to send information to specific servers to a greater degree. If we have homogenous server configuration then we would no use weighting.
-
-# Static Algorithms
-
-	Don't collect metrics but provide standard health checks i.e. if a server is removed then it will no longer be considered
-
-Round Robin Algo
-	First Request sent to first server, next request sent to next server and so on
-
-Weighted Round Robin
-	Can set weight properties for servers with better specs 
-
-DNS Round Robin
-	Instead of having to manually set which server to send the information to the DNS will resolve to a different server
-
-IP Hash
-	Uses client ip and server ip to create a unique hash to connect to a specific server
-
-### Dynamic Algorithms
-
-Least Connection
-	Send to server with least connection times
-
+# Load Balancing
 
 ## What is load balancing?
 
-A load balancer essentially distributes application traffic to different server endpoints. Sometimes it's important for send information to the same server. This is known as session persistence.
-
+A load balancer distributes application traffic to different server endpoints.
 ### Benefits
 
-High spikes in compute load can cause internal servers to lag or cause inconsistent responses. Improves the availability, scalability, security (can send information to different backends and localize the effect of an attack of an entire system), and performance.
-
+High spikes in compute load can cause internal servers to lag or cause inconsistent responses. Load balancers improves the availability, scalability, security (can send information to different backends and localize the effect of an attack of an entire system), and performance.
 ### Algorithms
 
-Round robin, least connection, random with 2 choices... etc.
+#### Static
+
+Uses set rules to assign packet to backend server
+
+Examples:
+	Round Robin: Distributes requests sequentially across servers
+	Random: Randomly selection
+	IP Hash: Assigns based on ip
+#### Dynamic
+
+Makes decisions based on real time information about system based on server load, response times, health.
+
+Examples:
+	Least connection: Connect to server with least connections
+	Weighted Round Robin: Assigns servers based on weightings
+	Predictive: Uses historical data and trends to anticipate load
+
+See the `least connections` folder for a concrete implementation of a dynamic algorithm.
 
 ### Different Types of Load Balancers
 
 #### OSI model
 
-7 layers to the model. Load balancers generally occur in layers 4 (transport) and layer 7 (application). 
+7 layers to the model. Load balancers generally occur in layers 4 (transport) and layer 7 (application).
 
-Layer 4 load balancers
-	This is a deployment where the accessible ip address refers to the load balancers ip address. When receiving the request the load balancer changes the destination ip to its selected end server.
+Layer 4 load balancers. This is a deployment where the accessible ip address refers to the load balancers ip address. When receiving the request the load balancer changes the destination ip to its selected end server.
 
-Layer 7 load balancer
-	Distribute information based on data found in application layer http headers, cookies, etc.
-	Allow routing decisions based on given parameters
+Layer 7 load balancer. Distribute information based on data found in application layer http headers, cookies, etc. Allow routing decisions based on given parameters.
 
-# Maglev Summary
+# Maglev - Google's Distributed System Specification
 
-System consists of multiple backends located between routers and endpoints. Maglev machines are responsible for matching packets to services and spreading evenly.
+## Implementation
 
-Maglev uses VIPs which connect to multiple endpoints. Routers have access to these VIPs (essentially acting as pseudo ip addresses). DNS sends to frontend location (specific VIP). Forwards packets to a Maglev machine via ECMP.
+Explanation of simplified rendition found within codebase focusing on core topics.
+## System Design
 
-Each machine contains a controller and forwarder. Controller states the health of the forwarder and cuts off connection to specific Maglev Machine if it’s not healthy. Forwarders contain backend pools connecting to real ip endpoints. Forwarder handles forwarding of connections.
-
-Forwarder’s design is optimized for speed by bypassing the linux kernel network stack. Performs a 5 tuple hashing to distribute packets to threads which then select backends.
-
-Connection oriented protocols like TCP need all packets sent to the same backend server. To do this they use a combination of consistent hashing and connection tracking. The 5 tuple hash is stored for quick look up. If this does not work, no healthy backend or no connection found, a new one is set using consistent hashing.
-
-Consistent hashing helps mitigate the effects of changing the maglev machine.
-
-Algorithm prioritizes load balancing by allowing backends to take turns filling consistency table. 
-
-# Maglev Summary
 
 ![High Level Diagram](images/high-level-diagram.png)
+
 *High-level architecture of the Maglev load balancing system*
 
+# Maglev Machine
+
+Composed of a Controller and Forwarder and in charge of a set of ip servers.
+
+## Controller
+
+Does periodic health checks for the forwarder. Depending on the health the forwarder will cut off connection of maglev machine to vip.
+
+## Forwarder
+
+In charge of forwarding packet to particular backend. Creates hash from packet specifications. First, checks our local connection tracking table. If found within table, returns associated backend. Otherwise uses consistency hash table to associate backend with packet and saves within connection tracking table.
+
+### Connection Tracking
+
+A hash table mapping a tuple to a particular backend. When we receive a tuple with the same configuration as we've already seen, it will be stored in our connection tracking table. This allows for session persistence even if our consistency hashing changes.
+
+## Consistency Hash
+
+Creates a large hash table with 100x the amount of backends we have. Creates a preference ordering for each backend for the indexes found within the hash table. In Round Robin fashion, iteratively assigns hash table indexes to a specific backend according to preference lists.
+
+Importantly, our consistency hash table is shared across all maglev machines such that we have a high likelihood of hitting the same backend resource if given a packet with the same configuration (as it will hash to the same backend resource) across our tables. Hence the "consistency" in consistency hash.
+
+# Further Reading (Theory)
+
+The implementation is a simplified rendition aimed at showing concrete code for the important concepts discussed. The theoretical underpinnings of the maglav architecture are discussed in greater detail here.
+
+For complete understanding, reference the original paper found within the references.
+
+## 
+
+  
+  
 
 # Todo
 
+  
+
 Break down into disjoint simple pieces to implement.
-    Understand Hashing Algorithm
-    Get clear idea of different concepts (maglev machines, forwarder, controller, vip to ip, backend pools) and draw out simplified diagrams
+
+Understand Hashing Algorithm
+
+Get clear idea of different concepts (maglev machines, forwarder, controller, vip to ip, backend pools) and draw out simplified diagrams
