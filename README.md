@@ -9,29 +9,24 @@ High spikes in compute load can cause internal servers to lag or cause inconsist
 ### Algorithms
 
 #### Static
-
 Uses set rules to assign packet to backend server
 
 Examples:
-	Round Robin: Distributes requests sequentially across servers
-	Random: Randomly selection
-	IP Hash: Assigns based on ip
-#### Dynamic
+- Round Robin: Distributes requests sequentially across servers
+- Random: Randomly selection
+- IP Hash: Assigns based on ip
 
+#### Dynamic
 Makes decisions based on real time information about system based on server load, response times, health.
 
 Examples:
-	Least connection: Connect to server with least connections
-	Weighted Round Robin: Assigns servers based on weightings
-	Predictive: Uses historical data and trends to anticipate load
-
-See the `least connections` folder for a concrete implementation of a dynamic algorithm.
+- Least connection: Connect to server with least connections
+- Weighted Round Robin: Assigns servers based on weightings
+- Predictive: Uses historical data and trends to anticipate load
 
 ### Different Types of Load Balancers
 
-#### OSI model
-
-7 layers to the model. Load balancers generally occur in layers 4 (transport) and layer 7 (application).
+The OSI model describes the different level of network communication. Load balancers generally occur in layers 4 (transport) and layer 7 (application).
 
 Layer 4 load balancers. This is a deployment where the accessible ip address refers to the load balancers ip address. When receiving the request the load balancer changes the destination ip to its selected end server.
 
