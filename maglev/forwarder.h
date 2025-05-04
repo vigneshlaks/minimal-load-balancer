@@ -24,23 +24,28 @@ struct Backend {
 
 class Forwarder {
     public:
-        Forwarder();
-        ~Forwarder();
-
-        // parse packet and send to frontend
-        void processPacket(const Packet& packet);
+        
+        // assign packet to backend
+        void assignPacket(const Packet& packet);
 
         void addBackend(const Backend& backend);
         void removeBackend(int ip);
 
         void setHealthCheck(int ip, int health_check);
+
+        void populateConsistencyHashTable();
+        void addConnectionTracking();
     
     private:
-        std::unordered_map<int, Backend> backends; // ip to backend
+        std::unordered_map<int, Backend> backends;
+        std::vector<int> consistency_hash_table; // index to backend
+        std::unordered_map<int, int> connection_tracking; // hash to backend
+        
         // TODO: Add consistent hash table
         // TODO: Add lru table
 
-        int computeHash(int ip);
+        int computeHash(const Packet& packet);
+        std::vector<int> generatePermutation(int backend_index, int M);
 };
 
 
