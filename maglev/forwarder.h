@@ -24,6 +24,7 @@ struct Backend {
 
 class Forwarder {
     public:
+        std::vector<int> consistency_hash_table; // index to backend
         
         // assign packet to backend
         void assignPacket(const Packet& packet);
@@ -37,9 +38,9 @@ class Forwarder {
         void addConnectionTracking();
     
     private:
+    
         std::unordered_map<int, Backend> backends;
-        std::vector<int> consistency_hash_table; // index to backend
-        std::unordered_map<int, int> connection_tracking; // hash to backend
+        std::unordered_map<std::string, int> connection_tracking; // string (5 tuple) to backend ip
         
         // TODO: Add consistent hash table
         // TODO: Add lru table
