@@ -3,43 +3,44 @@
 ## What is load balancing?
 
 A load balancer distributes application traffic to different server endpoints.
+
 ### Benefits
 
-High spikes in compute load can cause internal servers to lag or cause inconsistent responses. Load balancers improves the availability, scalability, security (can send information to different backends and localize the effect of an attack of an entire system), and performance.
+High spikes in compute load can cause internal servers to lag or cause inconsistent responses. Load balancers improve the availability, scalability, security (can send information to different backends and localize the effect of an attack on an entire system), and performance.
+
 ### Algorithms
 
 #### Static
-Uses set rules to assign packet to backend server.
+Uses set rules to assign packets to backend servers.
 
 Examples:
-- Round Robin: Distributes requests sequentially across servers
-- Random: Randomly selection
-- IP Hash: Assigns based on ip
+- **Round Robin**: Distributes requests sequentially across servers
+- **Random**: Random selection
+- **IP Hash**: Assigns based on IP
 
 #### Dynamic
-Makes decisions based on real time information about system based on server load, response times, health.
+Makes decisions based on real-time information about system load, response times, and health.
 
 Examples:
-- Least connection: Connect to server with least connections
-- Weighted Round Robin: Assigns servers based on weightings
-- Predictive: Uses historical data and trends to anticipate load
+- **Least Connection**: Connect to server with fewest connections
+- **Weighted Round Robin**: Assigns servers based on weightings
+- **Predictive**: Uses historical data and trends to anticipate load
 
 ### Different Types of Load Balancers
 
-The OSI model describes the different level of network communication. Load balancers generally occur in layers 4 (transport) and layer 7 (application).
+The OSI model describes the different levels of network communication. Load balancers generally operate at Layer 4 (transport) and Layer 7 (application).
 
-Layer 4 load balancers: this is a deployment where the accessible ip address refers to the load balancers ip address. When receiving the request the load balancer changes the destination ip to its selected end server.
+**Layer 4 load balancers**: A deployment where the accessible IP address refers to the load balancer's IP address. When receiving the request, the load balancer changes the destination IP to its selected end server.
 
-Layer 7 load balancer: distribute information based on data found in application layer http headers, cookies, etc. Allow routing decisions based on given parameters.
+**Layer 7 load balancer**: Distributes information based on data found in application layer HTTP headers, cookies, etc. Allows routing decisions based on given parameters.
 
 # Maglev - Google's Distributed System Specification
 
 ## Implementation
 
-Explanation of simplified rendition found within `maglev`  focusing on core topics.
+Explanation of the simplified rendition found within `maglev` focusing on core topics.
 
 ### System Design
-
 
 ![High Level Diagram](images/high-level-diagram.png)
 
@@ -47,15 +48,15 @@ Explanation of simplified rendition found within `maglev`  focusing on core topi
 
 ### Maglev Machine
 
-Composed of a Controller and Forwarder and in charge of a set of ip servers.
+Composed of a Controller and Forwarder and in charge of a set of IP servers.
 
 ### Controller
 
-Does periodic health checks for the forwarder. Depending on the health the forwarder will cut off connection of the maglev machine to the vip.
+Performs periodic health checks for the forwarder. Depending on the health, the forwarder will cut off connection of the Maglev machine to the VIP.
 
 ### Forwarder
 
-In charge of forwarding packet to particular backend. Creates hash from packet specifications. First, checks our local connection tracking table. If found within table, returns associated backend. Otherwise uses consistency hash table to associate backend with packet and saves within connection tracking table.
+Responsible for forwarding packets to particular backends. Creates a hash from packet specifications. First, it checks the local connection tracking table. If found within the table, it returns the associated backend. Otherwise, it uses a consistency hash table to associate a backend with the packet and saves this in the connection tracking table.
 
 #### Connection Tracking
 
@@ -63,32 +64,65 @@ A hash table mapping a tuple to a particular backend. When we receive a tuple wi
 
 ### Consistency Hash
 
-Creates a large hash table with 100x the amount of backends we have. Creates a preference ordering for each backend for the indexes found within the hash table. In Round Robin fashion, iteratively assigns hash table indexes to a specific backend according to preference lists.
+Creates a large hash table with 100x the amount of backends we have. Creates a preference ordering for each backend for the indexes found within the hash table. In Round Robin fashion, it iteratively assigns hash table indexes to a specific backend according to preference lists.
 
-Importantly, our consistency hash table is shared across all maglev machines so that we have a high likelihood of hitting the same backend resource for a given packet with the same configuration across our tables. Hence the "consistency" in consistency hash.
+Importantly, our consistency hash table is shared across all Maglev machines so that we have a high likelihood of hitting the same backend resource for a given packet with the same configuration across our tables. Hence the "consistency" in consistency hash.
 
-The Maglav Hashing algorithm balances load across backends while also causing minimal disruptions due to backend thanks to the algorithm used to populate .
+The Maglev Hashing algorithm balances load across backends while also causing minimal disruptions due to backend changes thanks to the algorithm used for population.
 
-# Further Reading (Theory)
+# Pertinent Concepts
 
-The theoretical underpinnings of the maglav architecture are discussed in greater detail here.
+Before speaking purely to the theory, important networking and Linux concepts and their relevance are defined here.
+
+## Network Interface Card
+
+Hardware to connect a computer to a network, responsible for low-level connection and handling.
+
+**Relevance**: NIC is used for packet processing. Bypass the kernel (explained below) allowing direct interaction with the NIC.
+
+## Generic Routing Encapsulation (GRE)
+
+IP protocol placing one packet inside another.
+
+**Relevance**: After selecting a backend with a Maglev machine, the original packet is encapsulated with a new IP header. Allows us to preserve the original packet.
+
+## Direct Server Return
+
+When sending information back to the client, instead of moving in some reverse direction back through the load balancer, we completely circumvent it and instead return directly to the client.
+
+**Relevance**: Maglev is bypassed on the return trip.
+
+## Border Gateway Protocol (BGP)
+
+Protocol to exchange information between autonomous systems on the internet.
+
+**Relevance**: Used by controller to cut off connection of Maglev machine to particular IP.
+
+# Theory
+
+The theoretical underpinnings of the Maglev architecture are discussed in greater detail here.
 
 For complete understanding, reference the original paper found within the references.
 
 ## ECMP (Equal Cost Multipath)
 
-Router distribute packets evenly to all Maglev Machines.  
+Each VIP has a set of attached VIPs. ECMP is the algorithm used to evenly distribute packets to all Maglev Machines.
 
-## Kernel Bypass Techniques
+## Kernel Bypass
 
-Direct NIC access without Linux kernel involvement allows for faster. 
+Maglev originally used Linux kernel stack for packet processing. Intuitively, the effects of a particular resource were not being taken advantage of. They incorporate a mechanism to skip this stage of the packet processing process and achieve 5x throughput.
 
 ## Forwarder Architecture
-Packets are distributed concurrently through threads and queues by the forwarder.
 
-## References
+Receives information from network interface card, performs processing and sends back. Importantly, Linux kernel is bypassed here.
+
+Packets received are sent to steering module which then assigns packets to particular thread queues from a 5-tuple hash based on the packet specification. The connection tracking table and consistent hashing table are similar to our implementation but for each thread instead.
+
+# Next Steps
+- Incorporate pure theory concepts into implementation
+- Read paper
+- Learn an adjacent concept
+
+# References
 
 Maglev Paper - https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/44824.pdf
-
-# Todo
-
