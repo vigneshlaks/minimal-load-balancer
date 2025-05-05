@@ -1,5 +1,3 @@
-// define the forwarder class
-
 #ifndef MAGLEV_FORWARDER_H
 #define MAGLEV_FORWARDER_H
 

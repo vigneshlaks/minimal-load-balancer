@@ -25,7 +25,7 @@ void Forwarder::assignPacket(const Packet& packet) {
     // mod for new index
     int table_index = hash_value % consistency_hash_table.size();
     int backend_ip = consistency_hash_table[table_index];
-    
+
     // add to connection tracking table
     connection_tracking[five_tuple] = backend_ip;
 }
