@@ -34,6 +34,8 @@ The OSI model describes the different levels of network communication. Load bala
 
 **Layer 7 load balancer**: Distributes information based on data found in application layer HTTP headers, cookies, etc. Allows routing decisions based on given parameters.
 
+Find a minimal least connections algorithm with its associated folder.
+
 # Maglev - Google's Distributed System Specification
 
 ## Implementation
@@ -42,9 +44,13 @@ Explanation of the simplified rendition found within `maglev` focusing on core t
 
 ### System Design
 
-![High Level Diagram](images/high-level-diagram.png)
+<div align="center">
+  <p><strong>Architecture</strong></p>
+  <img src="images/architecture.png" alt="System Architecture" width="70%" style="margin-bottom: 20px;">
+</div>
 
-*High-level architecture*
+</div>
+
 
 ### Maglev Machine
 
