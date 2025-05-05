@@ -9,7 +9,7 @@ High spikes in compute load can cause internal servers to lag or cause inconsist
 ### Algorithms
 
 #### Static
-Uses set rules to assign packet to backend server
+Uses set rules to assign packet to backend server.
 
 Examples:
 - Round Robin: Distributes requests sequentially across servers
@@ -28,61 +28,67 @@ Examples:
 
 The OSI model describes the different level of network communication. Load balancers generally occur in layers 4 (transport) and layer 7 (application).
 
-Layer 4 load balancers. This is a deployment where the accessible ip address refers to the load balancers ip address. When receiving the request the load balancer changes the destination ip to its selected end server.
+Layer 4 load balancers: this is a deployment where the accessible ip address refers to the load balancers ip address. When receiving the request the load balancer changes the destination ip to its selected end server.
 
-Layer 7 load balancer. Distribute information based on data found in application layer http headers, cookies, etc. Allow routing decisions based on given parameters.
+Layer 7 load balancer: distribute information based on data found in application layer http headers, cookies, etc. Allow routing decisions based on given parameters.
 
 # Maglev - Google's Distributed System Specification
 
 ## Implementation
 
-Explanation of simplified rendition found within codebase focusing on core topics.
-## System Design
+Explanation of simplified rendition found within `maglev`  focusing on core topics.
+
+### System Design
 
 
 ![High Level Diagram](images/high-level-diagram.png)
 
-*High-level architecture of the Maglev load balancing system*
+*High-level architecture*
 
-# Maglev Machine
+### Maglev Machine
 
 Composed of a Controller and Forwarder and in charge of a set of ip servers.
 
-## Controller
+### Controller
 
-Does periodic health checks for the forwarder. Depending on the health the forwarder will cut off connection of maglev machine to vip.
+Does periodic health checks for the forwarder. Depending on the health the forwarder will cut off connection of the maglev machine to the vip.
 
-## Forwarder
+### Forwarder
 
 In charge of forwarding packet to particular backend. Creates hash from packet specifications. First, checks our local connection tracking table. If found within table, returns associated backend. Otherwise uses consistency hash table to associate backend with packet and saves within connection tracking table.
 
-### Connection Tracking
+#### Connection Tracking
 
 A hash table mapping a tuple to a particular backend. When we receive a tuple with the same configuration as we've already seen, it will be stored in our connection tracking table. This allows for session persistence even if our consistency hashing changes.
 
-## Consistency Hash
+### Consistency Hash
 
 Creates a large hash table with 100x the amount of backends we have. Creates a preference ordering for each backend for the indexes found within the hash table. In Round Robin fashion, iteratively assigns hash table indexes to a specific backend according to preference lists.
 
-Importantly, our consistency hash table is shared across all maglev machines such that we have a high likelihood of hitting the same backend resource if given a packet with the same configuration (as it will hash to the same backend resource) across our tables. Hence the "consistency" in consistency hash.
+Importantly, our consistency hash table is shared across all maglev machines so that we have a high likelihood of hitting the same backend resource for a given packet with the same configuration across our tables. Hence the "consistency" in consistency hash.
+
+The Maglav Hashing algorithm balances load across backends while also causing minimal disruptions due to backend thanks to the algorithm used to populate .
 
 # Further Reading (Theory)
 
-The implementation is a simplified rendition aimed at showing concrete code for the important concepts discussed. The theoretical underpinnings of the maglav architecture are discussed in greater detail here.
+The theoretical underpinnings of the maglav architecture are discussed in greater detail here.
 
 For complete understanding, reference the original paper found within the references.
 
-## 
+## ECMP (Equal Cost Multipath)
 
-  
-  
+Router distribute packets evenly to all Maglev Machines.  
+
+## Kernel Bypass Techniques
+
+Direct NIC access without Linux kernel involvement allows for faster. 
+
+## Forwarder Architecture
+Packets are distributed concurrently through threads and queues by the forwarder.
+
+## References
+
+Maglev Paper - https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/44824.pdf
 
 # Todo
 
-  
-
-Break down into disjoint simple pieces to implement.
-
-Understand Hashing Algorithm
-
-Get clear idea of different concepts (maglev machines, forwarder, controller, vip to ip, backend pools) and draw out simplified diagrams
