@@ -125,6 +125,6 @@ void Forwarder::removeBackend(int ip) {
 }
 
 void Forwarder::setHealthCheck(int ip, int health_check) {
-    Backend backend = backends[ip];
+    auto& backend = backends[ip];
     backend.health_check = health_check;
 }
