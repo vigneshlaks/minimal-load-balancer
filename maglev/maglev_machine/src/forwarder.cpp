@@ -116,6 +116,10 @@ void Forwarder::addBackend(const Backend& backend) {
     backends[backend.ip] = backend;
 }
 
+const std::unordered_map<int, Backend>& Forwarder::getBackends() {
+    return backends;
+}
+
 void Forwarder::removeBackend(int ip) {
     backends.erase(ip);
 }

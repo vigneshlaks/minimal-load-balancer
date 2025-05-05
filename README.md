@@ -106,7 +106,7 @@ For complete understanding, reference the original paper found within the refere
 
 ## ECMP (Equal Cost Multipath)
 
-Each VIP has a set of attached VIPs. ECMP is the algorithm used to evenly distribute packets to all Maglev Machines.
+Each VIP has a set of attached Maglev Machines. ECMP is the algorithm used to evenly distribute packets to all Maglev Machines.
 
 ## Kernel Bypass
 

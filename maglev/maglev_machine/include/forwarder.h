@@ -4,21 +4,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-
-// packet info
-struct Packet {
-    int src_ip;
-    int src_port;
-    int dst_ip;
-    int dst_port;
-    int protocol;
-};
-
-// parsing for backend
-struct Backend {
-    int ip;
-    int health_check;
-};
+#include "common/types.h"
 
 class Forwarder {
     public:
@@ -29,6 +15,7 @@ class Forwarder {
 
         void addBackend(const Backend& backend);
         void removeBackend(int ip);
+        const std::unordered_map<int, Backend>& getBackends();
 
         void setHealthCheck(int ip, int health_check);
 
@@ -37,7 +24,7 @@ class Forwarder {
     
     private:
     
-        std::unordered_map<int, Backend> backends;
+        std::unordered_map<int, Backend> backends; // ip to backend
         std::unordered_map<std::string, int> connection_tracking; // string (5 tuple) to backend ip
         
         // TODO: Add consistent hash table
