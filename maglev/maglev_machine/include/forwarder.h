@@ -26,9 +26,6 @@ class Forwarder {
     
         std::unordered_map<int, Backend> backends; // ip to backend
         std::unordered_map<std::string, int> connection_tracking; // string (5 tuple) to backend ip
-        
-        // TODO: Add consistent hash table
-        // TODO: Add lru table
 
         int computeHash(const Packet& packet);
         std::vector<int> generatePermutation(int backend_index, int M);

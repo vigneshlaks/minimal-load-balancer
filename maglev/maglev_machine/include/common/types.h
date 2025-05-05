@@ -1,7 +1,6 @@
 #ifndef MAGLEV_TYPES_H
 #define MAGLEV_TYPES_H
 
-// Packet structure for network traffic
 struct Packet {
     int src_ip;
     int src_port;
@@ -10,7 +9,7 @@ struct Packet {
     int protocol;
 };
 
-// Backend structure for load balancing targets
+
 struct Backend {
     int ip;
     int health_check;
